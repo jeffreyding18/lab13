@@ -54,7 +54,7 @@ the partial results, is a common one for converting functions to
 tail-recursive form.
 
 ......................................................................
-Exercise 1: Tail-recursive sum 
+Exercise 1: Tail-recursive sum
 
 Rewrite the sum function to be tail recursive. (As usual, for this and
 succeeding exercises, you shouldn't feel beholden to how the
@@ -63,8 +63,13 @@ might want to add a "rec", or use a different argument list, or no
 argument list at all but binding to an anonymous function instead.)
 ....................................................................*)
 
-let sum _ =
-  failwith "sum not implemented" ;;
+let sum lst =
+    let rec sum' lst acc =
+        match lst with
+        | [] -> acc
+        | hd :: tl -> (sum' lst (hd + acc)) in
+    sum' lst 0 ;;
+
 
 (*....................................................................
 Exercise 2: Write a tail-recursive function that finds the product of
@@ -84,16 +89,28 @@ ordering of the lists.
    # prods [1; 2; 3] [1; 2; 3] ;;
    -: int list = [1; 4; 9] *)
 
-let prods _ =
-  failwith "prods not implemented" ;;
+let prods lst1 lst2 =
+    let rec prods' lst1 lst2 acc =
+        match lst1, lst2 with
+        | [], [] -> acc
+        | [], _
+        | _, [] -> failwith "Lengths not equal"
+        | hd1::tl1, hd2::tl2 -> prods' tl1 tl2 ((hd1 * hd2) :: acc) in
+    List.rev (prods' lst1 lst2 []) ;;
 
 (*....................................................................
 Exercise 3: Modify your prods function to use option types to deal
 with lists of different lengths.
 ....................................................................*)
 
-let prods_opt _ =
-  failwith "prods not implemented" ;;
+let prods_opt (lst1 : int list) (lst2 : int list) : int list option =
+    let rec prods_opt' lst1 lst2 acc =
+        match lst1, lst2 with
+        | [], [] -> Some acc
+        | [], _
+        | _, [] -> None
+        | hd1::tl1, hd2::tl2 -> prods_opt' tl1 tl2 (acc @ [hd1 * hd2]) in
+    prods_opt' lst1 lst2 [] ;;
 
 (*....................................................................
 Exercise 4: Finally, combine your sum and prods functions to create a
@@ -102,8 +119,7 @@ of corresponding elements of the lists). (For reference, you
 implemented dot product in lab 2.)
 ....................................................................*)
 
-let dotprod _ =
-  failwith "dotprod not implemented" ;;
+let dotprod lst1 lst2 = sum (prods lst1 lst2) ;;
 
 (*====================================================================
 Part 2: Loops
@@ -129,10 +145,24 @@ For example, we expect the following behavior:
 ....................................................................*)
 
 let odd_while (x : int) : int list =
-  failwith "oddwhile not implemented" ;;
+    let lst = ref [] in
+    let i = ref 1 in
+    while !i < x do
+        if !i mod 2 = 1 then
+            lst := !i :: !lst
+        else lst := !lst;
+        i := succ !i
+    done;
+    List.rev !lst;;
 
 let odd_for (x : int) : int list =
-  failwith "oddfor not implemented" ;;
+    let lst = ref [] in
+    for i = 1 to x do
+        if i mod 2 = 1 then
+            lst := i :: !lst
+        else lst := !lst;
+    done;
+    List.rev !lst;;
 
 (* Here is the length function implemented using a while loop, as in
 the reading:
@@ -156,7 +186,13 @@ while loop.
 ....................................................................*)
 
 let sum_iter (lst : int list) : int =
-  failwith "sum_iter not implemented" ;;
+    let l = ref lst in
+    let i = ref 0 in
+    while List.length !l > 0 do
+        i := !i + List.hd !l;
+        l := List.tl !l
+    done;
+    !i ;;
 
 (*....................................................................
 Exercise 7: Rewrite the recursive prods function from above using a
@@ -165,7 +201,18 @@ have different lengths.
 ....................................................................*)
 
 let prods_iter (xs : int list) (ys : int list) : int list =
-  failwith "prods_iter not implemented" ;;
+    if List.length xs <> List.length ys then
+        failwith "Uneven List Lengths"
+    else
+        let l1 = ref xs in
+        let l2 = ref ys in
+        let r = ref [] in
+        while List.length !l1 > 0 do
+            r := ((List.hd !l1) * (List.hd !l2)) :: !r;
+            l1 := List.tl !l1;
+            l2 := List.tl !l2
+        done;
+        List.rev !r;;
 
 (* You've now implemented prods a few times, so think about which of
 them you think is the most efficient, and which of them required the
@@ -188,8 +235,13 @@ List.rev, and you've likely used it in previous exercises.)
 ....................................................................*)
 
 let reverse (lst : 'a list) : 'a list =
-  failwith "reverse not implemented" ;;
-
+    let l = ref lst in
+    let r = ref [] in
+    while List.length !l > 0 do
+        r := (List.hd !l) :: !r;
+        l := List.tl !l
+    done;
+    !r ;;
 (* As you've observed in this lab, procedural programming can be
 useful, but most problems can and should be solved with functional
 programming.  However, there is one famous problem that you may be
@@ -218,4 +270,19 @@ than 23.
 ....................................................................*)
 
 let mario (height : int) : unit =
-  failwith "mario not implemented" ;;
+    if height > 23 then raise (Invalid_argument "Height too tall")
+    else
+        let i = ref 2 in
+        let s = ref "" in
+        while !i <= height do
+            for space = !i to height - 1 do
+                s := !s ^ " "
+            done;
+            for hash = 1 to !i do
+                s := !s ^ "#"
+            done;
+            print_string !s;
+            print_string "\n";
+            s := "";
+            i := succ !i
+        done;;
