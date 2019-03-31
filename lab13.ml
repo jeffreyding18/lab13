@@ -286,7 +286,7 @@ let mario (height : int) : unit =
                 s := !s ^ "#"
             done;
             print_string !s;
-            print_string "\n";
+            print_newline ();
             s := "";
             i := succ !i
         done;;
