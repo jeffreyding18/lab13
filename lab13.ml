@@ -63,12 +63,13 @@ might want to add a "rec", or use a different argument list, or no
 argument list at all but binding to an anonymous function instead.)
 ....................................................................*)
 
-let sum lst =
-    let rec sum' lst acc =
+let sum (lst : int list) : int =
+    let rec sum_tr lst acc =
         match lst with
         | [] -> acc
-        | hd :: tl -> (sum' lst (hd + acc)) in
-    sum' lst 0 ;;
+        | hd :: tl -> sum_tr tl (hd + acc) in
+    sum_tr lst 0 ;;
+
 
 
 (*....................................................................
@@ -89,28 +90,31 @@ ordering of the lists.
    # prods [1; 2; 3] [1; 2; 3] ;;
    -: int list = [1; 4; 9] *)
 
-let prods lst1 lst2 =
-    let rec prods' lst1 lst2 acc =
-        match lst1, lst2 with
-        | [], [] -> acc
-        | [], _
-        | _, [] -> failwith "Lengths not equal"
-        | hd1::tl1, hd2::tl2 -> prods' tl1 tl2 ((hd1 * hd2) :: acc) in
-    List.rev (prods' lst1 lst2 []) ;;
+let prods (xs : int list) (ys : int list) : int list =
+ let rec prods_tr xs ys acc =
+   match xs, ys with
+   | [], [] -> acc
+   | xhd :: xtl, yhd :: ytl ->
+      prods_tr xtl ytl (xhd * yhd :: acc)
+   | [], _
+   | _, [] ->
+      raise (Failure "Lists must be of same length") in
+ List.rev (prods_tr xs ys []) ;;
 
 (*....................................................................
 Exercise 3: Modify your prods function to use option types to deal
 with lists of different lengths.
 ....................................................................*)
 
-let prods_opt (lst1 : int list) (lst2 : int list) : int list option =
-    let rec prods_opt' lst1 lst2 acc =
-        match lst1, lst2 with
-        | [], [] -> Some acc
-        | [], _
-        | _, [] -> None
-        | hd1::tl1, hd2::tl2 -> prods_opt' tl1 tl2 (acc @ [hd1 * hd2]) in
-    prods_opt' lst1 lst2 [] ;;
+let prods_opt (xs : int list) (ys : int list) : int list option =
+  let rec prods_tr xs ys acc =
+    match xs, ys with
+    | [], [] -> Some (List.rev acc)
+    | [], _
+    | _, [] -> None
+    | xhd :: xtl, yhd :: ytl ->
+       prods_tr xtl ytl (xhd * yhd :: acc) in
+  prods_tr xs ys [];;
 
 (*....................................................................
 Exercise 4: Finally, combine your sum and prods functions to create a
@@ -147,7 +151,7 @@ For example, we expect the following behavior:
 let odd_while (x : int) : int list =
     let lst = ref [] in
     let i = ref 1 in
-    while !i < x do
+    while !i <= x do
         if !i mod 2 = 1 then
             lst := !i :: !lst
         else lst := !lst;
